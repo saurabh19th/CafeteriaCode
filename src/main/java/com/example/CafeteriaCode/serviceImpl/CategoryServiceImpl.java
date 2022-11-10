@@ -7,16 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.example.CafeteriaCode.rest.CategoryRest;
-
+import com.example.CafeteriaCode.service.CategoryService;
 import com.example.CafeteriaCode.POJO.Category;
 import com.example.CafeteriaCode.constants.CafeConstants;
 import com.example.CafeteriaCode.dao.CategoryDao;
-import com.example.CafeteriaCode.service.CategoryService;
 import com.example.CafeteriaCode.utils.CafeUtils;
 
 @Service
-public class CategoryServiceImpl implements CategoryRest {
+public class CategoryServiceImpl implements CategoryService {
 	
 	@Autowired
 	CategoryDao categoryDao;
