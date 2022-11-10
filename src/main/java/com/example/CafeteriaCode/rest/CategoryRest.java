@@ -1,4 +1,4 @@
-package rest;
+package com.example.CafeteriaCode.rest;
 
 import java.util.Map;
 
