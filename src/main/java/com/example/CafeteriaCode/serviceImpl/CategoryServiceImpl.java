@@ -1,7 +1,10 @@
 package com.example.CafeteriaCode.serviceImpl;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +62,23 @@ public class CategoryServiceImpl implements CategoryService {
 		}
 		category.setName(requestMap.get("name"));
 		return category;
+	}
+
+
+	@Override
+	public ResponseEntity<List<Category>> getAllCategory(String filterValue) {
+try {
+			
+			if(!Strings.isEmpty(filterValue)  && filterValue.equalsIgnoreCase("true")) {
+				return new ResponseEntity<List<Category>>(categoryDao.getAllCategory(),HttpStatus.OK);
+			}
+            
+			return new ResponseEntity<>(categoryDao.findAll(),HttpStatus.OK);
+			
+		}catch(Exception ex) {
+			ex.printStackTrace();
+		}
+      return new ResponseEntity<List<Category>>(new ArrayList<>(),HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 }
