@@ -3,10 +3,7 @@ package com.example.CafeteriaCode.rest;
 
 import com.example.CafeteriaCode.wrapper.ProductWrapper;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +17,12 @@ public interface ProductRest {
     @GetMapping(path="/get")
     ResponseEntity<List<ProductWrapper>> getAllProduct();
 
+    @PutMapping(path="/update")
+    ResponseEntity<String> updateProduct(Map<String, String> requestMap);
 
+    @PostMapping(path="/delete")
+    ResponseEntity<String> deleteProduct(@PathVariable Integer id);
 
+    @PostMapping(path = "/updateStatus")
+    ResponseEntity<String> updateStatus(@RequestBody Map<String,String> requestMap);
 }

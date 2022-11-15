@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -76,9 +77,50 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ResponseEntity<List<ProductWrapper>> getAllProduct() {
         try{
-          //  return new ResponseEntity<>(productDao.getAllProduct,HttpStatus.OK);
+           return new ResponseEntity<>(productDao.getAllProduct(),HttpStatus.OK);
         }catch (Exception ex){
             ex.printStackTrace();
         }
         return new ResponseEntity<>(new ArrayList<>(),HttpStatus.INTERNAL_SERVER_ERROR);    }
+
+    @Override
+    public ResponseEntity<String> updateProduct(Map<String, String> requestMap) {
+
+
+        try {
+//            if(jwtFilter.isAdmin()){
+            if (validateProductMap(requestMap, true)) {
+                Optional<Product> optional = productDao.findById(Integer.parseInt(requestMap.get("id")));
+                if (!optional.isEmpty()) {
+                    Product product = getProductFromMap(requestMap, true);
+                    product.setStatus(optional.get().getStatus());
+                } else {
+                    return CafeUtils.getResponseEntity("Product id does not exist", HttpStatus.OK);
+                }
+            } else {
+                return CafeUtils.getResponseEntity(CafeConstants.INVALID_DATA, HttpStatus.BAD_REQUEST);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
+    public ResponseEntity<String> deleteProduct(Integer id) {
+        try{
+           // if(jwtFilter.isAdmin){
+                Optional optional=productDao.findById(id);
+                if(!optional.isEmpty()){
+                    productDao.deleteById(id);
+                    return CafeUtils.getResponseEntity("Product Deleted Successfully",HttpStatus.OK);
+                }return CafeUtils.getResponseEntity("Product id does not exist",HttpStatus.OK);
+//            }else{
+//                return CafeUtils.getResponseEntity(CafeConstants.UNATHORIZED_ACCESS,HttpStatus.UNAUTHORIZED);
+//            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG,HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
