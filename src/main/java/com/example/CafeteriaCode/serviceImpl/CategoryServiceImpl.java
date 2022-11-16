@@ -81,4 +81,9 @@ try {
       return new ResponseEntity<List<Category>>(new ArrayList<>(),HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
+	@Override
+	public ResponseEntity<String> updateCategory(Map<String, String> requestMap) {
+		return null;
+	}
+
 }
