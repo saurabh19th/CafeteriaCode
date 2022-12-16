@@ -3,14 +3,22 @@ package com.example.CafeteriaCode.serviceImpl;
 import com.example.CafeteriaCode.JWT.CustomerUsersDetailsService;
 import com.example.CafeteriaCode.JWT.JwtFilter;
 import com.example.CafeteriaCode.JWT.JwtUtil;
+import com.example.CafeteriaCode.POJO.Category;
+import com.example.CafeteriaCode.POJO.PreOrder;
+import com.example.CafeteriaCode.POJO.Product;
 import com.example.CafeteriaCode.POJO.User;
 import com.example.CafeteriaCode.constants.CafeConstants;
+import com.example.CafeteriaCode.dao.PreOrderDao;
+import com.example.CafeteriaCode.dao.ProductDao;
 import com.example.CafeteriaCode.dao.UserDao;
 import com.example.CafeteriaCode.service.UserService;
 import com.example.CafeteriaCode.utils.CafeUtils;
 import com.example.CafeteriaCode.utils.EmailUtils;
 import com.example.CafeteriaCode.wrapper.UserWrapper;
 import com.google.common.base.Strings;
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.exception.GeoIp2Exception;
+import com.maxmind.geoip2.model.CityResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
@@ -21,6 +29,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 @Slf4j
@@ -29,6 +41,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     UserDao userDao;
+
+    @Autowired
+    PreOrderDao preOrderDao;
 
     @Autowired
     AuthenticationManager authenticationManager;
@@ -247,6 +262,86 @@ public class UserServiceImpl implements UserService {
 
         return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
 
+    }
+
+    @Override
+    public ResponseEntity<String> getLocation(String ipAddress) throws IOException, GeoIp2Exception {
+
+        try
+        {
+          //  String IP="49.36.112.184";
+            String dblocation="C:\\Users\\simishai\\Downloads\\GeoLite2-City_20221206\\GeoLite2-City_20221206\\GeoLite2-City.mmdb";
+
+            File database = new File(dblocation);
+            DatabaseReader dbr = new DatabaseReader.Builder(database).build();
+
+            InetAddress ipA = InetAddress.getByName(ipAddress);
+            CityResponse response = dbr.city(ipA);
+
+            String country = response.getCountry().getName();
+            String city = response.getCity().getName();
+            String postal = response.getPostal().getCode();
+            String state = response.getLeastSpecificSubdivision().getName();
+
+           String location = city+" - " +postal+", "+ state+", "+country+".";
+
+            return CafeUtils.getResponseEntity(location, HttpStatus.OK);
+        }
+
+        catch(Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
+        return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+
+
+
+    }
+
+    @Override
+    public ResponseEntity<String> preOrder(Map<String, String> requestMap) {
+        try {
+
+            if (validatePreOrderMap(requestMap, false)) {
+                preOrderDao.save(getPreOrderFromMap(requestMap, true));
+                return CafeUtils.getResponseEntity("Preorder placed successfully.", HttpStatus.OK);
+            }
+                return CafeUtils.getResponseEntity(CafeConstants.INVALID_DATA,HttpStatus.BAD_REQUEST);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return CafeUtils.getResponseEntity(CafeConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private PreOrder getPreOrderFromMap(Map<String, String> requestMap, boolean isAdd) {
+
+        PreOrder preOrder = new PreOrder();
+        if (isAdd) {
+            preOrder.setProductId(Integer.parseInt(requestMap.get("productId")));
+
+            preOrder.setProductName(requestMap.get("productName"));
+            preOrder.setProductPrice(requestMap.get("productPrice"));
+            preOrder.setUsername(requestMap.get("username"));
+            preOrder.setLocation(requestMap.get("location"));
+            preOrder.setDate(requestMap.get("date"));
+            preOrder.setTime(requestMap.get("time"));
+            preOrder.setPaymentMethod(requestMap.get("paymentMethod"));
+
+        }
+        return preOrder;
+    }
+
+    private boolean validatePreOrderMap(Map<String, String> requestMap, boolean validateId) {
+
+        if (requestMap.containsKey("orderId")  && validateId) {
+                return true;
+            } else if (!validateId) {
+                return true;
+            }
+
+        return false;
     }
 
     private void sendMailToAllAdmin(String status, String user, List<String> allAdmin)
